@@ -65,6 +65,28 @@ media-ops-playbook/
 
 ---
 
+## YouTube API 利用準備（最短）
+
+1. 依存パッケージをインストールする
+    ```bash
+    pip install -r python/requirements.txt
+    ```
+2. `.env.example` を `.env` にコピーする
+    ```bash
+    cp .env.example .env
+    ```
+3. `.env` に以下を設定する
+    - `YOUTUBE_API_KEY`（Google Cloud で発行した API キー）
+    - `YOUTUBE_CHANNEL_ID`（分析対象チャンネル ID）
+    - `MAX_COMMENTS_PER_VIDEO`（任意、既定値: 100）
+4. 収集スクリプトを実行する
+    ```bash
+    python python/youtube_collector.py
+    ```
+5. `data/` に生成された JSON / CSV を分析に使う
+
+---
+
 ## 関連リポジトリ
 
 - [`portfolio-masterplan`](https://github.com/zGVfRcgR/portfolio-masterplan) — 元記事・日報の供給元

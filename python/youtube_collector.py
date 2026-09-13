@@ -17,10 +17,11 @@ YouTube Data API v3 コレクタースクリプト
 必要な環境変数（.env ファイルまたは実行環境で設定）:
   YOUTUBE_API_KEY=<APIキー>
   YOUTUBE_CHANNEL_ID=<チャンネルID>  # 例: UCxxxxxxxxxxxxxx
+    MAX_COMMENTS_PER_VIDEO=100
 
 使い方:
-  pip install -r requirements.txt
-  python youtube_collector.py
+    pip install -r python/requirements.txt
+    python python/youtube_collector.py
 
 注意:
   YouTube Data API v3 の無料クォータは 1日 10,000 ユニットです。
@@ -47,7 +48,7 @@ load_dotenv()
 
 API_KEY: str = os.getenv("YOUTUBE_API_KEY", "")
 CHANNEL_ID: str = os.getenv("YOUTUBE_CHANNEL_ID", "")
-MAX_COMMENTS_PER_VIDEO: int = int(os.getenv("MAX_COMMENTS_PER_VIDEO", "100"))
+MAX_COMMENTS_PER_VIDEO_RAW: str = os.getenv("MAX_COMMENTS_PER_VIDEO", "100")
 OUTPUT_DIR: Path = Path("data")
 
 # ─────────────────────────────────────────
@@ -89,6 +90,28 @@ def save_csv(rows: list[dict], path: Path) -> None:
         writer.writeheader()
         writer.writerows(rows)
     print(f"[保存] {path}")
+
+
+def parse_max_comments_per_video(value: str) -> int:
+    """MAX_COMMENTS_PER_VIDEO の値を安全に整数へ変換する。"""
+    try:
+        parsed = int(value)
+    except ValueError as exc:
+        raise EnvironmentError(
+            "環境変数 MAX_COMMENTS_PER_VIDEO は整数で指定してください。\n"
+            f"現在の値: {value}"
+        ) from exc
+
+    if parsed < 1:
+        raise EnvironmentError(
+            "環境変数 MAX_COMMENTS_PER_VIDEO は 1 以上の整数で指定してください。\n"
+            f"現在の値: {parsed}"
+        )
+
+    return parsed
+
+
+MAX_COMMENTS_PER_VIDEO: int = parse_max_comments_per_video(MAX_COMMENTS_PER_VIDEO_RAW)
 
 
 # ─────────────────────────────────────────
@@ -136,13 +159,27 @@ def fetch_video_ids(youtube, uploads_playlist_id: str) -> list[str]:
     video_ids: list[str] = []
     next_page_token = None
 
+    if not uploads_playlist_id:
+        print("[注意] uploads_playlist_id が空のため、動画取得をスキップします。")
+        return video_ids
+
     while True:
-        response = youtube.playlistItems().list(
-            part="contentDetails",
-            playlistId=uploads_playlist_id,
-            maxResults=50,
-            pageToken=next_page_token,
-        ).execute()
+        try:
+            response = youtube.playlistItems().list(
+                part="contentDetails",
+                playlistId=uploads_playlist_id,
+                maxResults=50,
+                pageToken=next_page_token,
+            ).execute()
+        except HttpError as e:
+            # 動画未投稿の新規チャンネルなどでは uploads プレイリストが存在しない場合がある。
+            if e.resp.status == 404:
+                print(
+                    "[注意] uploads プレイリストが見つからないため、動画取得をスキップします: "
+                    f"playlist_id={uploads_playlist_id}"
+                )
+                return video_ids
+            raise
 
         for item in response.get("items", []):
             vid = item.get("contentDetails", {}).get("videoId")
@@ -284,12 +321,12 @@ def main() -> None:
     if not API_KEY:
         raise EnvironmentError(
             "環境変数 YOUTUBE_API_KEY が設定されていません。\n"
-            ".env ファイルに YOUTUBE_API_KEY=<あなたのAPIキー> を記載してください。"
+            "プロジェクトルートで .env.example を .env にコピーし、YOUTUBE_API_KEY を設定してください。"
         )
     if not CHANNEL_ID:
         raise EnvironmentError(
             "環境変数 YOUTUBE_CHANNEL_ID が設定されていません。\n"
-            ".env ファイルに YOUTUBE_CHANNEL_ID=<チャンネルID> を記載してください。"
+            "プロジェクトルートの .env に YOUTUBE_CHANNEL_ID を設定してください。"
         )
 
     youtube = build("youtube", "v3", developerKey=API_KEY)

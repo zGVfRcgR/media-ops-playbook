@@ -39,7 +39,11 @@
    ```bash
    pip install -r python/requirements.txt
    ```
-2. プロジェクトルートに `.env` ファイルを作成し、以下を記載する
+2. プロジェクトルートで `.env.example` を `.env` にコピーし、値を設定する
+   ```bash
+   cp .env.example .env
+   ```
+   設定内容:
    ```
    YOUTUBE_API_KEY=<Google Cloud で発行した API キー>
    YOUTUBE_CHANNEL_ID=<分析対象のチャンネル ID>
