@@ -1,7 +1,7 @@
 # 運用ワークフロー
 
 ## 1. ネタ選定
-1. `portfolio-masterplan/docs/daily_logs` を確認する
+1. このリポジトリ内のメモ、記事、アイデアを確認する
 2. ショート動画向きのテーマを選ぶ
 3. リスクの高い題材を分ける
 4. 台本化候補を決める
@@ -11,6 +11,18 @@
 2. 冒頭にフックを置く
 3. 結論を先に出す
 4. 必要ならCTAを付ける
+5. 台本は `youtube/scripts/` 配下に保存する
+   - `youtube/scripts/draft/` : 下書き
+   - `youtube/scripts/review/` : レビュー中
+   - `youtube/scripts/published/` : 確定済み
+6. ファイル名は `YYYY-MM-DD_<テーマ>_v1.md` などの形式を使う
+
+### 台本の保存例
+- `youtube/scripts/draft/2026-10-06_short-term-investing_v1.md`
+- `youtube/scripts/review/2026-10-06_short-term-investing_v2.md`
+- `youtube/scripts/published/2026-10-06_short-term-investing_final.md`
+
+> このリポジトリ内で台本を一貫して管理する。別リポジトリへ分離した管理は行わない。
 
 ## 3. コンプライアンス確認
 1. 税務・法務・金融表現を確認する
